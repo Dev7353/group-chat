@@ -1,12 +1,10 @@
 import socket, threading
 
-HOST = "127.0.0.1"
+HOST = "141.37.200.21"
 PORT = 50000
 PEER = None
 
 def recvThread(conn, addr):
-    conn.settimeout(100)
-
     while(True):
         try:
             data = conn.recv(1024)
@@ -22,7 +20,11 @@ def recvThread(conn, addr):
             if data_string[0] == 'H' and data_string[1] ==  " ":
                 print("HELLO REQUEST")
                 name = data_string
-                assert PEER.send((name + "|" + addr[0]).encode("utf-8")) > 0
+                while(True):
+                    assert PEER.send((name + "|" + addr[0]).encode("utf-8")) > 0
+                    o = PEER.recv(1024)
+                    if "OK" in str(o):
+                        break
             elif data_string[0] == 'M' and data_string[1] == " ":
                 print("MESSAGE REQUEST")
                 context  = data_string[2:]
@@ -41,12 +43,14 @@ def recv():
     global PEER, HOST, PORT
     receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     receiver.bind((HOST, PORT))
-    receiver.listen(5)
+    receiver.listen(10)
 
     conn, addr = receiver.accept()
+    print(str(addr))
     PEER = conn
     while(True):
         conn, addr = receiver.accept()
+        print(str(addr))
         t = threading.Thread(target=recvThread, args=(conn, addr))
         t.start()
 

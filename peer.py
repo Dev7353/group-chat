@@ -1,11 +1,13 @@
 import threading, socket
-HOST = "127.0.0.1"
+HOST = "141.37.200.21"
 PORT = 50000
 BUDDY = None
 NICKNAME = ""
 PEER = None
 BUDDIES = {
-    "127.0.0.1": ["", False, None]
+    "141.37.200.21": ["", False, None],
+    "141.37.168.35": ["", False, None],
+    "141.37.202.58": ["", False, None],
 }
 
 def outputThread():
@@ -20,6 +22,7 @@ def outputThread():
         if data[0] == 'H' and data[1] == ' ':
             name, ip = data[2:].split("|")
             BUDDIES[ip][0] = name
+            PEER.send("OK".encode("utf-8"))
             print("UPDATE BUDDY LIST. NEW NAME: " + name)
         else:
             print("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t " + data + " <")
@@ -34,7 +37,7 @@ def scanThread():
                 print("NEW BUDDY: [" + entry + "]")
                 BUDDIES[entry][1] = True
                 BUDDIES[entry][2] = s
-                s.send(("H " + NICKNAME).encode("utf-8"))
+                s.send(("H " + NICKNAME + "\n").encode("utf-8"))
             elif BUDDIES[entry][1] == True:
                 try:
                     BUDDIES[entry][2].send("".encode("utf-8"))
@@ -52,8 +55,8 @@ def peer():
     PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     assert PEER.connect_ex((HOST, PORT)) == 0
     output = threading.Thread(target=outputThread)
-    output.start()
     scanner.start()
+    output.start()
 
     while(True):
         print("M: Message")
@@ -87,7 +90,7 @@ def peer():
                     break
                 for entry in BUDDIES:
                     if BUDDIES[entry][1] == True:
-                        BUDDIES[entry][2].send(("M " + msg))
+                        BUDDIES[entry][2].send(("M " + msg).encode("utf-8"))
 
 def getSocket(buddy):
     for entry in BUDDIES:
