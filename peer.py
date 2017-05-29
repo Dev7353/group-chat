@@ -1,11 +1,11 @@
 import threading, socket
-HOST = "192.168.2.104"
+HOST = "127.0.0.1"
 PORT = 50000
 BUDDY = None
 NICKNAME = ""
 PEER = None
 BUDDIES = {
-    "192.168.2.106": ["", False, None]
+    "127.0.0.1": ["", False, None]
 }
 
 def outputThread():
@@ -81,9 +81,13 @@ def peer():
                 getSocket(BUDDY).send(("M " + msg).encode("utf-8"))
 
         elif i[0] == 'G':
-            PEER.send(("NICKNAME " + NICKNAME).encode("utf-8"))
-            PEER.send(("NICKNAME " + NICKNAME).encode("utf-8"))
-            PEER.send("TOALL")
+            while True:
+                msg = input(">> ")
+                if msg == 'Q':
+                    break
+                for entry in BUDDIES:
+                    if BUDDIES[entry][1] == True:
+                        BUDDIES[entry][2].send(("M " + msg))
 
 def getSocket(buddy):
     for entry in BUDDIES:
