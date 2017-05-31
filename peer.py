@@ -1,13 +1,12 @@
 import threading, socket
-HOST = "141.37.200.21"
+HOST = "141.37.168.33"
 PORT = 50000
 BUDDY = None
 NICKNAME = ""
 PEER = None
 BUDDIES = {
-    "141.37.200.21": ["", False, None],
-    "141.37.168.35": ["", False, None],
-    "141.37.202.58": ["", False, None],
+    HOST: ["", False, None],
+    "141.37.202.31": ["", False, None],
 }
 
 def outputThread():
@@ -37,7 +36,7 @@ def scanThread():
                 print("NEW BUDDY: [" + entry + "]")
                 BUDDIES[entry][1] = True
                 BUDDIES[entry][2] = s
-                s.send(("H " + NICKNAME + "\n").encode("utf-8"))
+                s.send(("H " + NICKNAME).encode("utf-8"))
             elif BUDDIES[entry][1] == True:
                 try:
                     BUDDIES[entry][2].send("".encode("utf-8"))
@@ -49,13 +48,13 @@ def scanThread():
             else:
                 s.close()
 def peer():
+    scanflag = False
     global NICKNAME, PEER
     NICKNAME = input("NICKNAME: ")
     scanner = threading.Thread(target=scanThread)
     PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     assert PEER.connect_ex((HOST, PORT)) == 0
     output = threading.Thread(target=outputThread)
-    scanner.start()
     output.start()
 
     while(True):
@@ -63,6 +62,7 @@ def peer():
         print("G: Group Message")
         print("L: List of Buddies")
         print("Q: Quit")
+        print("S: Scan")
         i = input("> ")
         cleanDisplay()
         if len(i) < 1:
@@ -73,6 +73,12 @@ def peer():
             break
         elif i == 'L':
             print(str(BUDDIES))
+        elif i  == 'S':
+            if scanflag == True:
+                print("Your scanner is already running")
+                continue
+            scanner.start()
+            scanflag = True
         elif i[0] == 'M':
             print(str(BUDDIES))
             BUDDY = input("CHOOSE YOUR BUDDY: ")

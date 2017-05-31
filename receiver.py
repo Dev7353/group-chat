@@ -1,6 +1,6 @@
 import socket, threading
 
-HOST = "141.37.200.21"
+HOST = "141.37.168.33"
 PORT = 50000
 PEER = None
 
