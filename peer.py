@@ -37,12 +37,9 @@ def scanThread():
                 BUDDIES[entry][1] = True
                 BUDDIES[entry][2] = s
                 s.send(("H " + NICKNAME).encode("utf-8"))
-
-                while (True):
-                    #slice data string and stuff
-                    data_string = str(s.recv(1024))
-                    if data_string[0] == 'H' and data_string[1] == " ":
-                        print("HELLO REQUEST")
+                data_string = str(s.recv(1024))
+                if data_string[0] == 'H' and data_string[1] == " ":
+                    print("HELLO REQUEST")
             elif BUDDIES[entry][1] == True:
                 try:
                     BUDDIES[entry][2].send("".encode("utf-8"))
