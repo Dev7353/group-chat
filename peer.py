@@ -1,12 +1,12 @@
 import threading, socket
-HOST = "141.37.168.33"
+HOST = "192.168.178.27"
 PORT = 50000
 BUDDY = None
 NICKNAME = ""
 PEER = None
 BUDDIES = {
     HOST: ["", False, None],
-    "141.37.202.31": ["", False, None],
+    "192.168.178.31": ["", False, None],
 }
 
 def outputThread():
@@ -40,6 +40,7 @@ def scanThread():
 
                 while (True):
                     #slice data string and stuff
+                    data_string = str(s.recv(1024))
                     if data_string[0] == 'H' and data_string[1] == " ":
                         print("HELLO REQUEST")
             elif BUDDIES[entry][1] == True:
