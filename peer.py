@@ -1,64 +1,21 @@
-import threading, socket
-HOST = "192.168.178.27"
-PORT = 50000
-BUDDY = None
-NICKNAME = ""
-PEER = None
-BUDDIES = {
-    HOST: ["", False, None],
-    "192.168.178.31": ["", False, None],
-}
+import socket, receiver, threading
+from config import *
 
-def outputThread():
-    global PEER, BUDDIES
-    while(True):
-        print(PEER)
-        data = PEER.recv(1024)
-        if len(str(data)) == 3:
-            continue
-        data = str(data)[2:len(str(data))-1]
+conf = None
 
-        if data[0] == 'H' and data[1] == ' ':
-            name, ip = data[2:].split("|")
-            BUDDIES[ip][0] = name
-            PEER.send("OK".encode("utf-8"))
-            print("UPDATE BUDDY LIST. NEW NAME: " + name)
-        else:
-            print("\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t " + data + " <")
-
-
-def scanThread():
-    global PORT
-    while(True):
-        for entry in BUDDIES:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if BUDDIES[entry][1] == False and s.connect_ex((entry, PORT)) == 0:
-                print("NEW BUDDY: [" + entry + "]")
-                BUDDIES[entry][1] = True
-                BUDDIES[entry][2] = s
-                s.send(("H " + NICKNAME).encode("utf-8"))
-                data_string = str(s.recv(1024))
-                if data_string[0] == 'H' and data_string[1] == " ":
-                    print("HELLO REQUEST")
-            elif BUDDIES[entry][1] == True:
-                try:
-                    BUDDIES[entry][2].send("".encode("utf-8"))
-                except socket.error:
-                    print("DISCONNECT FROM BUDDY: [" + entry + "]")
-                    BUDDIES[entry][1] = False
-                    BUDDIES[entry][2] = None
-                    s.close()
-            else:
-                s.close()
 def peer():
+    global conf
     scanflag = False
-    global NICKNAME, PEER
     NICKNAME = input("NICKNAME: ")
-    scanner = threading.Thread(target=scanThread)
+    conf = Config()
+    conf.setNickname(NICKNAME)
     PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    assert PEER.connect_ex((HOST, PORT)) == 0
-    output = threading.Thread(target=outputThread)
-    output.start()
+    PEER.connect_ex((conf.HOST, conf.PORT))
+    conf.setPeer(PEER)
+
+    scanner = threading.Thread(target=scanThread)
+    receiverThread =threading.Thread(target=receiver.recv, args=(conf,))
+    receiverThread.start()
 
     while(True):
         print("M: Message")
@@ -72,18 +29,17 @@ def peer():
             print("PLEASE SELECT YOUR OPTION")
             continue
         if i == 'Q':
-            PEER.send("QUIT".encode("utf-8"))
             break
         elif i == 'L':
-            print(str(BUDDIES))
+            print(str(conf.BUDDIES))
         elif i  == 'S':
             if scanflag == True:
                 print("Your scanner is already running")
                 continue
-            scanner.start()
             scanflag = True
+            scanner.start()
         elif i[0] == 'M':
-            print(str(BUDDIES))
+            print(str(conf.BUDDIES))
             BUDDY = input("CHOOSE YOUR BUDDY: ")
             print("SEND YOUR MESSAGE")
             while(True):
@@ -97,20 +53,46 @@ def peer():
                 msg = input(">> ")
                 if msg == 'Q':
                     break
-                for entry in BUDDIES:
-                    if BUDDIES[entry][1] == True:
-                        BUDDIES[entry][2].send(("M " + msg).encode("utf-8"))
+                for entry in conf.BUDDIES:
+                    if conf.BUDDIES[entry][1] == True:
+                       conf.BUDDIES[entry][2].send(("M " + msg).encode("utf-8"))
 
 def getSocket(buddy):
-    for entry in BUDDIES:
-        if BUDDIES[entry][0] == buddy:
-            return BUDDIES[entry][2]
+    for entry in conf.BUDDIES:
+        if conf.BUDDIES[entry][0] == buddy:
+            return conf.BUDDIES[entry][2]
 
     return None
 
 def cleanDisplay():
     for i in range(25):
         print()
+
+def scanThread():
+    global conf
+    while(True):
+        for entry in conf.BUDDIES:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if conf.BUDDIES[entry][1] == False and s.connect_ex((entry, conf.PORT)) == 0:
+                print("[SCANNER] NEW BUDDY: [" + entry + "]")
+                conf.BUDDIES[entry][1] = True
+                conf.BUDDIES[entry][2] = s
+                s.send(("H " + conf.NICKNAME).encode("utf-8"))
+                data_string = str(s.recv(1024))
+
+                if("OK" in data_string):
+                    print("[SCANNER] CONNECTION ESTABLISHED")
+
+            elif conf.BUDDIES[entry][1] == True:
+                try:
+                    conf.BUDDIES[entry][2].send("".encode("utf-8"))
+                except socket.error:
+                    print("DISCONNECT FROM BUDDY: [" + entry + "]")
+                    conf.BUDDIES[entry][1] = False
+                    conf.BUDDIES[entry][2] = None
+                    s.close()
+            else:
+                s.close()
 
 if __name__ == '__main__':
     peer()
