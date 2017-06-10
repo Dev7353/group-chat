@@ -7,7 +7,7 @@ class Config:
     PEER = None
     BUDDIES = {
         HOST: ["", False, None],
-        #"192.168.178.31": ["", False, None],
+        "192.168.178.31": ["", False, None],
     }
 
     def setNickname(self, name):
@@ -24,6 +24,4 @@ class Config:
         return -1
 
     def addPartner(self, conn, addr, name):
-        self.BUDDIES[addr[0]][0] = name
-        self.BUDDIES[addr[0]][1] = True
-        self.BUDDIES[addr[0]][2] = conn
+        self.BUDDIES[addr[0]] = [name, True, conn]
