@@ -1,8 +1,9 @@
 import socket, threading
+from config import *
 
-config = None
+conf = None
 
-def recvThread(conn, addr):
+def recvThread(conn, addr): #tcp receive thread
     while(True):
         try:
             data = conn.recv(1024)
@@ -18,10 +19,11 @@ def recvThread(conn, addr):
                 print("[RECEIVER] HELLO REQUEST")
                 name = data_string[2:]
 
-                if(config.addName(name, addr) == -1):
+                if(conf.addName(name, addr) == -1):
                     print("[RECEIVER] Socket exists. Append new partner")
-                    config.addPartner(conn, addr, name)
+                    conf.addPartner(conn, addr, name)
 
+                print("[RECEIVER] debug: send OK")
                 conn.send("OK".encode("utf-8"))
                 print("[RECEIVER] CONNECTION ESTABLISHED")
 
@@ -40,20 +42,48 @@ def recvThread(conn, addr):
         except socket.error:
             exit(0)
 
-def recv(conf):
-    global config
-    config= conf
+def receiveThreadUDP(receiver):
+    global conf
 
-    receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    receiver.bind((config.HOST, config.PORT))
-    receiver.listen(10)
+    while True:
+        data, addr = receiver.recvfrom(1024)
+        data_string = str(data)
+        data_string = data_string[2:len(data_string)-1]
 
-    while(True):
+        if(data_string[0] == 'H' and data_string[1] == " "):
+            print("[RECEIVER] HELLO REQUEST")
+            name = data_string[2:]
+
+            if(conf.addName(name, addr) == -1):
+                print("[RECEIVER] Socket exists. Append new partner")
+                conf.addPartner(receiver, addr, name)
+
+            import time; time.sleep(3)
+            receiver.sendto("OK".encode("utf-8"), addr)
+            print("[RECEIVER] CONNECTION ESTABLISHED")
+        elif(data_string[0] == 'M' and data_string[1] == " "):
+            print("[RECEIVER] MESSAGE REQUEST")
+            print(data_string[2:] + " <<")
+        else:
+            return -1
+
+
+def recv(con):
+    global conf
+    conf = con
+
+    if(conf.MODE == TCP):
+        receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        receiver.bind((conf.HOST, conf.PORT))
+        receiver.listen(10)
+    else:
+        receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        receiver.bind((conf.HOST, conf.PORT))
+
+    if(conf.MODE == TCP):
         conn, addr = receiver.accept()
-        t = threading.Thread(target=recvThread, args=(conn, addr))
-        t.start()
-
-
-
-if __name__ == "__main__":
-    recv()
+        tcp = threading.Thread(target=recvThread, args=(conn, addr))
+        tcp.start()
+    else:
+        udp = threading.Thread(target=receiveThreadUDP, args=(receiver,))
+        udp.start()

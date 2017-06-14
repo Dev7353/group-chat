@@ -1,20 +1,30 @@
+TCP = "TCP"
+UDP = "UDP"
 
 class Config:
-
-    HOST = "192.168.178.27"
+    MODE = ""
+    HOST = "127.0.0.1"
     NICKNAME = ""
     PORT = 50000
     PEER = None
     BUDDIES = {
         HOST: ["", False, None],
-        "192.168.178.31": ["", False, None],
+        #"192.168.178.31": ["", False, None],
     }
+
+    def setMode(self, mode):
+        if((mode != TCP) and (mode != UDP)):
+            return -1
+        self.MODE = mode
+        return 0
 
     def setNickname(self, name):
         self.NICKNAME = name
+        return 0
 
     def setPeer(self, peer):
         self.PEER=peer
+        return 0
 
     def addName(self, name, addr):
         for entry in self.BUDDIES:

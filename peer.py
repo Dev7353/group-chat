@@ -5,15 +5,35 @@ conf = None
 
 def peer():
     global conf
+
+    conf = Config()
     scanflag = False
+    MODE = TCP
+    PEER = None
+
+    while(True):
+        MODE = input("Configure your Mode [TCP/UDP]: ")
+        if(MODE == TCP):
+            PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            PEER.connect((conf.HOST, conf.PORT))
+            break
+        elif(MODE == UDP):
+            PEER = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            break
+        else:
+            print("Your configuration doesnt exist. Try again.")
+
     NICKNAME = input("NICKNAME: ")
     conf = Config()
-    conf.setNickname(NICKNAME)
-    PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    PEER.connect_ex((conf.HOST, conf.PORT))
-    conf.setPeer(PEER)
+    assert conf.setMode(MODE) == 0
+    assert conf.setNickname(NICKNAME) == 0
+    assert conf.setPeer(PEER) == 0
 
-    scanner = threading.Thread(target=scanThread)
+    if(MODE == TCP):
+        scanner = threading.Thread(target=scanThread)
+    else:
+        scanner = threading.Thread(target=scanThreadUdp)
+
     receiverThread =threading.Thread(target=receiver.recv, args=(conf,))
     receiverThread.start()
 
@@ -46,21 +66,32 @@ def peer():
                 msg = input(">> ")
                 if msg == 'Q':
                     break
-                getSocket(BUDDY).send(("M " + msg).encode("utf-8"))
-
+                if(MODE == TCP):
+                    getSocket(BUDDY).send(("M " + msg).encode("utf-8"))
+                else:
+                    print("[CLIENT] debug: send M " + msg + " to " + str(getAddr(BUDDY)))
+                    getSocket(BUDDY).sendto(("M " + msg).encode("utf-8"), getAddr(BUDDY))
         elif i[0] == 'G':
             while True:
                 msg = input(">> ")
                 if msg == 'Q':
                     break
                 for entry in conf.BUDDIES:
-                    if conf.BUDDIES[entry][1] == True:
-                       conf.BUDDIES[entry][2].send(("M " + msg).encode("utf-8"))
+                    getSocket(entry).sendto(("M " + msg).encode("utf-8"), (entry, conf.PORT))
 
 def getSocket(buddy):
+    global conf
     for entry in conf.BUDDIES:
         if conf.BUDDIES[entry][0] == buddy:
             return conf.BUDDIES[entry][2]
+
+    return None
+
+def getAddr(buddy):
+    global conf
+    for entry in conf.BUDDIES:
+        if conf.BUDDIES[entry][0] == buddy:
+            return entry, conf.PORT
 
     return None
 
@@ -90,6 +121,37 @@ def scanThread():
                     print("DISCONNECT FROM BUDDY: [" + entry + "]")
                     conf.BUDDIES[entry][1] = False
                     conf.BUDDIES[entry][2] = None
+                    s.close()
+            else:
+                s.close()
+
+def scanThreadUdp():
+    global conf
+    while(True):
+        for entry in conf.BUDDIES:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            if conf.BUDDIES[entry][1] == False:
+                reachable = False
+                s.sendto(("H " + conf.NICKNAME).encode("utf-8"), (entry, conf.PORT))
+                data_string = ""
+                while(reachable == False):
+                    try:
+                        data_string=str(s.recvfrom(1024))
+                        reachable = True
+                        break
+                    except socket.timeout:
+                        reachable = False
+                        break
+
+                if(reachable == True):
+                    print("[SCANNER] NEW BUDDY: [" + entry + "]")
+                    conf.BUDDIES[entry][1] = True
+                    conf.BUDDIES[entry][2] = s
+
+                    if("OK" in data_string):
+                        print("[SCANNER] CONNECTION ESTABLISHED")
+
+                else:
                     s.close()
             else:
                 s.close()
