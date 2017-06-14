@@ -1,6 +1,5 @@
 import socket, receiver, threading
 from config import *
-
 conf = None
 
 def peer():
@@ -60,8 +59,20 @@ def peer():
                 if(MODE == TCP):
                     getSocket(BUDDY).send(("M " + msg).encode("utf-8"))
                 else:
-                    print("[CLIENT] debug: send M " + msg + " to " + str(getAddr(BUDDY)))
-                    getSocket(BUDDY).sendto(("M " + msg).encode("utf-8"), getAddr(BUDDY))
+                    counter = 0
+                    getSocket(BUDDY).settimeout(2)
+                    while(counter < 10):
+                        getSocket(BUDDY).sendto(("M " + msg).encode("utf-8"), getAddr(BUDDY))
+                        try:
+                            getSocket(BUDDY).recvfrom(1024)
+                            break
+                        except socket.timeout:
+                            print("[PEER] CONNECTION LOST. TRY AGAIN...")
+                            counter += 1
+
+                    if(counter == 9):
+                        print("[PEER] CONNECTION PARTNER DOWN")
+                        #remove from buddy list
         elif i[0] == 'G':
             while True:
                 msg = input(">> ")

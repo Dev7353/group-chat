@@ -64,6 +64,7 @@ def receiveThreadUDP(receiver):
         elif(data_string[0] == 'M' and data_string[1] == " "):
             print("[RECEIVER] MESSAGE REQUEST")
             print(data_string[2:] + " <<")
+            conf.BUDDIES[addr[0]][2].sendto("RECEIVED".encode("utf-8"), addr)
         else:
             return -1
 

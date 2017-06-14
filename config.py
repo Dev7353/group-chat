@@ -3,13 +3,13 @@ UDP = "UDP"
 
 class Config:
     MODE = ""
-    HOST = "127.0.0.1"
+    HOST = "141.37.202.37"
     NICKNAME = ""
     PORT = 50000
     PEER = None
     BUDDIES = {
-        HOST: ["", False, None],
-        #"192.168.178.31": ["", False, None],
+        #HOST: ["", False, None],
+        "141.37.168.35": ["", False, None],
     }
 
     def setMode(self, mode):
