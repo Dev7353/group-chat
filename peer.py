@@ -79,7 +79,11 @@ def peer():
                 if msg == 'Q':
                     break
                 for entry in conf.BUDDIES:
-                    getSocket(entry).sendto(("M " + msg).encode("utf-8"), (entry, conf.PORT))
+                    if(MODE == TCP):
+                        getSocket(conf.BUDDIES[entry][0]).send(("M " + msg).encode("utf-8"))
+                    else:
+                        BUD = conf.BUDDIES[entry][0]
+                        getSocket(BUD).sendto(("M " + msg).encode("utf-8"), getAddr(BUD))
 
 def getSocket(buddy):
     global conf
