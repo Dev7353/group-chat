@@ -11,17 +11,8 @@ def peer():
     MODE = TCP
     PEER = None
 
-    while(True):
-        MODE = input("Configure your Mode [TCP/UDP]: ")
-        if(MODE == TCP):
-            PEER = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            PEER.connect((conf.HOST, conf.PORT))
-            break
-        elif(MODE == UDP):
-            PEER = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            break
-        else:
-            print("Your configuration doesnt exist. Try again.")
+    MODE = input("Configure your Mode [TCP/UDP]: ")
+
 
     NICKNAME = input("NICKNAME: ")
     conf = Config()
