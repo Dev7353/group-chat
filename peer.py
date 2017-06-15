@@ -12,7 +12,6 @@ def peer():
 
     MODE = input("Configure your Mode [TCP/UDP]: ")
 
-
     NICKNAME = input("NICKNAME: ")
     conf = Config()
     assert conf.setMode(MODE) == 0
@@ -112,13 +111,16 @@ def scanThread():
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if conf.BUDDIES[entry][1] == False and s.connect_ex((entry, conf.PORT)) == 0:
                 print("[SCANNER] NEW BUDDY: [" + entry + "]")
-                conf.BUDDIES[entry][1] = True
-                conf.BUDDIES[entry][2] = s
                 s.send(("H " + conf.NICKNAME).encode("utf-8"))
+                print("[SCANNER] RECEIVE ACKNOWLEDGEMENT")
                 data_string = str(s.recv(1024))
 
                 if("OK" in data_string):
-                    print("[SCANNER] CONNECTION ESTABLISHED")
+                    print("[SCANNER] CONNECTION ESTABLISHED: " + entry)
+                    conf.BUDDIES[entry][1] = True
+                    conf.BUDDIES[entry][2] = s
+                else:
+                    print("[SCANNER] CONNECTION FAILED: " + entry)
 
             elif conf.BUDDIES[entry][1] == True:
                 try:

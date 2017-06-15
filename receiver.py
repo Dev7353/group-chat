@@ -23,9 +23,8 @@ def recvThread(conn, addr): #tcp receive thread
                     print("[RECEIVER] Socket exists. Append new partner")
                     conf.addPartner(conn, addr, name)
 
-                print("[RECEIVER] debug: send OK")
                 conn.send("OK".encode("utf-8"))
-                print("[RECEIVER] CONNECTION ESTABLISHED")
+                print("[RECEIVER] CONNECTION ESTABLISHED: " + str(addr[0]))
 
 
             elif data_string[0] == 'M' and data_string[1] == " ":
@@ -57,8 +56,6 @@ def receiveThreadUDP(receiver):
             if(conf.addName(name, addr) == -1):
                 print("[RECEIVER] Socket exists. Append new partner")
                 conf.addPartner(receiver, addr, name)
-
-            import time; time.sleep(3)
             receiver.sendto("OK".encode("utf-8"), addr)
             print("[RECEIVER] CONNECTION ESTABLISHED")
         elif(data_string[0] == 'M' and data_string[1] == " "):
@@ -77,14 +74,11 @@ def recv(con):
         receiver = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         receiver.bind((conf.HOST, conf.PORT))
         receiver.listen(10)
-    else:
-        receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        receiver.bind((conf.HOST, conf.PORT))
-
-    if(conf.MODE == TCP):
         conn, addr = receiver.accept()
         tcp = threading.Thread(target=recvThread, args=(conn, addr))
         tcp.start()
     else:
+        receiver = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        receiver.bind((conf.HOST, conf.PORT))
         udp = threading.Thread(target=receiveThreadUDP, args=(receiver,))
         udp.start()

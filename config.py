@@ -8,8 +8,7 @@ class Config:
     PORT = 50000
     PEER = None
     BUDDIES = {
-        HOST: ["", False, None],
-        #"141.37.168.35": ["", False, None],
+     HOST: ["", False, None],
     }
 
     def setMode(self, mode):
@@ -34,4 +33,4 @@ class Config:
         return -1
 
     def addPartner(self, conn, addr, name):
-        self.BUDDIES[addr[0]] = [name, True, conn]
+        self.BUDDIES[addr[0]] = [name, False, conn]
