@@ -1,6 +1,7 @@
 TCP = "TCP"
 UDP = "UDP"
 
+
 class Config:
     MODE = ""
     HOST = "127.0.0.1"
@@ -8,7 +9,7 @@ class Config:
     PORT = 50000
     PEER = None
     BUDDIES = {
-     HOST: ["", False, None],
+        HOST: ["", False, None],
     }
 
     def setMode(self, mode):
@@ -22,7 +23,7 @@ class Config:
         return 0
 
     def setPeer(self, peer):
-        self.PEER=peer
+        self.PEER = peer
         return 0
 
     def addName(self, name, addr):

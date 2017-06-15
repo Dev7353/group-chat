@@ -1,21 +1,24 @@
-import socket, threading
+import socket
+import threading
 from config import *
 
 conf = None
 
-def recvThread(conn, addr): #tcp receive thread
+
+def recvThread(conn, addr):  # tcp receive thread
     while(True):
         try:
             data = conn.recv(1024)
-            if len(str(data)) == 3: # only b'' is received
+            if len(str(data)) == 3:  # only b'' is received
                 continue
             data_string = str(data)
-            data_string = data_string[2:len(data_string)-1]
-            if len(data_string) <= 3: # H Message so that slicing works correctly
-                conn.send("[RECEIVER] NO MESSAGE. WHATS WRONG WITH YOU?".encode("utf-8"))
+            data_string = data_string[2:len(data_string) - 1]
+            if len(data_string) <= 3:  # H Message so that slicing works correctly
+                conn.send(
+                    "[RECEIVER] NO MESSAGE. WHATS WRONG WITH YOU?".encode("utf-8"))
                 print(data_string)
                 continue
-            if data_string[0] == 'H' and data_string[1] ==  " ":
+            if data_string[0] == 'H' and data_string[1] == " ":
                 print("[RECEIVER] HELLO REQUEST")
                 name = data_string[2:]
 
@@ -26,13 +29,13 @@ def recvThread(conn, addr): #tcp receive thread
                 conn.send("OK".encode("utf-8"))
                 print("[RECEIVER] CONNECTION ESTABLISHED: " + str(addr[0]))
 
-
             elif data_string[0] == 'M' and data_string[1] == " ":
                 print("[RECEIVER] MESSAGE REQUEST")
-                context  = data_string[2:]
+                context = data_string[2:]
                 print(context + " <<")
             else:
-                conn.send("[RECEIVER] YOUR MESSAGE DOESNT CORRESPOND WITH THE PROTOCOL.".encode("utf-8"))
+                conn.send(
+                    "[RECEIVER] YOUR MESSAGE DOESNT CORRESPOND WITH THE PROTOCOL.".encode("utf-8"))
                 continue
 
         except socket.timeout:
@@ -41,13 +44,14 @@ def recvThread(conn, addr): #tcp receive thread
         except socket.error:
             exit(0)
 
+
 def receiveThreadUDP(receiver):
     global conf
 
     while True:
         data, addr = receiver.recvfrom(1024)
         data_string = str(data)
-        data_string = data_string[2:len(data_string)-1]
+        data_string = data_string[2:len(data_string) - 1]
 
         if(data_string[0] == 'H' and data_string[1] == " "):
             print("[RECEIVER] HELLO REQUEST")

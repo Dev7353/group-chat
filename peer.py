@@ -1,6 +1,9 @@
-import socket, receiver, threading
+import socket
+import receiver
+import threading
 from config import *
 conf = None
+
 
 def peer():
     global conf
@@ -23,7 +26,7 @@ def peer():
     else:
         scanner = threading.Thread(target=scanThreadUdp)
 
-    receiverThread =threading.Thread(target=receiver.recv, args=(conf,))
+    receiverThread = threading.Thread(target=receiver.recv, args=(conf,))
     receiverThread.start()
 
     while(True):
@@ -41,7 +44,7 @@ def peer():
             break
         elif i == 'L':
             print(str(conf.BUDDIES))
-        elif i  == 'S':
+        elif i == 'S':
             if scanflag == True:
                 print("Your scanner is already running")
                 continue
@@ -61,7 +64,8 @@ def peer():
                     counter = 0
                     getSocket(BUDDY).settimeout(2)
                     while(counter < 10):
-                        getSocket(BUDDY).sendto(("M " + msg).encode("utf-8"), getAddr(BUDDY))
+                        getSocket(BUDDY).sendto(
+                            ("M " + msg).encode("utf-8"), getAddr(BUDDY))
                         try:
                             getSocket(BUDDY).recvfrom(1024)
                             break
@@ -71,7 +75,7 @@ def peer():
 
                     if(counter == 9):
                         print("[PEER] CONNECTION PARTNER DOWN")
-                        #remove from buddy list
+                        # remove from buddy list
         elif i[0] == 'G':
             while True:
                 msg = input(">> ")
@@ -79,10 +83,14 @@ def peer():
                     break
                 for entry in conf.BUDDIES:
                     if(MODE == TCP):
-                        getSocket(conf.BUDDIES[entry][0]).send(("M " + msg).encode("utf-8"))
+                        getSocket(
+                            conf.BUDDIES[entry][0]).send(
+                            ("M " + msg).encode("utf-8"))
                     else:
                         BUD = conf.BUDDIES[entry][0]
-                        getSocket(BUD).sendto(("M " + msg).encode("utf-8"), getAddr(BUD))
+                        getSocket(BUD).sendto(
+                            ("M " + msg).encode("utf-8"), getAddr(BUD))
+
 
 def getSocket(buddy):
     global conf
@@ -92,6 +100,7 @@ def getSocket(buddy):
 
     return None
 
+
 def getAddr(buddy):
     global conf
     for entry in conf.BUDDIES:
@@ -100,16 +109,19 @@ def getAddr(buddy):
 
     return None
 
+
 def cleanDisplay():
     for i in range(25):
         print()
+
 
 def scanThread():
     global conf
     while(True):
         for entry in conf.BUDDIES:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if conf.BUDDIES[entry][1] == False and s.connect_ex((entry, conf.PORT)) == 0:
+            if conf.BUDDIES[entry][1] == False and s.connect_ex(
+                    (entry, conf.PORT)) == 0:
                 print("[SCANNER] NEW BUDDY: [" + entry + "]")
                 s.send(("H " + conf.NICKNAME).encode("utf-8"))
                 print("[SCANNER] RECEIVE ACKNOWLEDGEMENT")
@@ -133,6 +145,7 @@ def scanThread():
             else:
                 s.close()
 
+
 def scanThreadUdp():
     global conf
     while(True):
@@ -140,11 +153,12 @@ def scanThreadUdp():
             s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             if conf.BUDDIES[entry][1] == False:
                 reachable = False
-                s.sendto(("H " + conf.NICKNAME).encode("utf-8"), (entry, conf.PORT))
+                s.sendto(
+                    ("H " + conf.NICKNAME).encode("utf-8"), (entry, conf.PORT))
                 data_string = ""
                 while(reachable == False):
                     try:
-                        data_string=str(s.recvfrom(1024))
+                        data_string = str(s.recvfrom(1024))
                         reachable = True
                         break
                     except socket.timeout:
